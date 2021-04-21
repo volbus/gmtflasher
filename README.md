@@ -23,3 +23,6 @@ The compilation being very simple, a make file was not needed, so, to install ju
 Make sure libxml2-dev and libusb-1.0-dev are installed as dependencies.
 
 Usage: `gmtflasher [option] -u <mcu> <command> [<args>] [<ihex_file>]`
+
+For usage details call the program with the -h optiion to print help:
+  `gmtflasher -h`
