@@ -9,9 +9,10 @@ to it's developers - an official release of the communication protocol from ST i
 might not be the best implementation.
 
 It has a simple xml device definition file, that can be easily edited to fit other MCUs, if not already defined.
+The file is installed in /usr/share/gmtflasher/gmtflasher_devices.xml
 
-When compiling code the full device definition (option bytes, eeprom and flash) can be assembled into one
-hex file, and selectively programmed into the MCU. This has the advantage of a single hex file versus separate
+When compiling code, the full MCU definition (option bytes, eeprom and flash) can be assembled into one hex
+file, and selectively programmed into the MCU. This has the advantage of a single hex file versus separate
 files for option bytes, eeprom and flash memory.
 It also skips by default pages that already have the same content, this greatly reducing the number of write
 cycles during development. Some STM8 devices have an endurance of only 100 erase/write cycles according to
@@ -19,10 +20,11 @@ datasheet, which can easily be reached during development.
 
 Support for other proprietary platforms (like Windows or MAC) will never be provided.
 
-The compilation being very simple, a make file was not needed, so, to install just run install.sh as sudo.
-Make sure libxml2-dev and libusb-1.0-dev are installed as dependencies.
+The compilation being very simple, a make file was not needed, so, to install just run install.sh as sudo, after
+you make sure the execution mode bit is set (clone/download will probably remove it), and libxml2-dev and
+libusb-1.0-dev are installed as dependencies.
 
 Usage: `gmtflasher [option] -u <mcu> <command> [<args>] [<ihex_file>]`
 
-For usage details call the program with the -h optiion to print help:
+For usage details call the program with the -h (or --help) option to print help:
   `gmtflasher -h`
