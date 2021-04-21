@@ -132,6 +132,13 @@
       <Eeprom_Size>2048</Eeprom_Size>
       <Eeprom_Add>0x1000</Eeprom_Add>
     </STM8AL3LE8A>
+    <STM8L001J3>
+      <Device_Type>STM8L</Device_Type>
+      <Flash_Size>8K</Flash_Size>
+      <Block_Size>64</Block_Size>
+      <Eeprom_Size>0</Eeprom_Size>
+      <Eeprom_Add>0x9800</Eeprom_Add>
+    </STM8L001J3>
     <STM8L050J3>
       <Device_Type>STM8L</Device_Type>
       <Flash_Size>8K</Flash_Size>
