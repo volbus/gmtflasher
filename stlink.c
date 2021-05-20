@@ -581,7 +581,7 @@ Stlink_Unlock_Memory (mcu *uc, uint32_t address)
 }
 
 static void
-Programm_Block (uint32_t blk_add, uint32_t blk_size, unsigned char *blk_data)
+programm_block (uint32_t blk_add, uint32_t blk_size, unsigned char *blk_data)
 {
   unsigned char buf[16];
   uint32_t iaspr;
@@ -750,7 +750,7 @@ Stlink_Prog_Block (uint32_t blk_add, uint32_t blk_size, unsigned char *blk_data,
 {
   // If force flag is set we write all block data
   if (prog_mode & PROG_MODE_FORCE_ALL) {
-    Programm_Block (blk_add, blk_size, blk_data);
+    programm_block (blk_add, blk_size, blk_data);
     return 0;
   }
 
@@ -768,9 +768,14 @@ Stlink_Prog_Block (uint32_t blk_add, uint32_t blk_size, unsigned char *blk_data,
   uint32_t k = 0;
 
   for (int i=0; i<blk_size; i+=4) {
-    if ( *((uint32_t *)(blk_data + i)) != *((uint32_t *)(ucblock + i)) )
+    uint32_t mask = *((uint32_t *)(blk_def + i));
+    uint32_t d0 = *((uint32_t *)(blk_data + i)) & mask;
+    uint32_t d1 = *((uint32_t *)(ucblock + i)) & mask;
+    if (d0 != d1)
       k++;
   }
+  if (k==0)
+	return -1;
 
   // If more than 2 4-byte words are different, we write the full block
   if (k > 2) {
@@ -782,9 +787,9 @@ Stlink_Prog_Block (uint32_t blk_add, uint32_t blk_size, unsigned char *blk_data,
         if ( *(blk_def + i) )
           *(ucblock + i) = *(blk_data + i);
       }
-      Programm_Block (blk_add, blk_size, ucblock);
+      programm_block (blk_add, blk_size, ucblock);
     } else {
-      Programm_Block (blk_add, blk_size, blk_data);
+      programm_block (blk_add, blk_size, blk_data);
     }
     free (ucblock);
     return 0;
@@ -796,7 +801,10 @@ Stlink_Prog_Block (uint32_t blk_add, uint32_t blk_size, unsigned char *blk_data,
   int cnt = 0;
 
   for (int i=0; i<blk_size; i+=4) {
-    if ( *((uint32_t *)(blk_data + i)) != *((uint32_t *)(ucblock + i)) ) {
+    uint32_t mask = *((uint32_t *)(blk_def + i));
+    uint32_t d0 = *((uint32_t *)(blk_data + i)) & mask;
+    uint32_t d1 = *((uint32_t *)(ucblock + i)) & mask;
+    if (d0 != d1) {
       *(blk_def+i) ? (k=*(blk_data+i)) : (k=*(ucblock+i));
       k<<=8;
       *(blk_def+i+1) ? (k|=*(blk_data+i+1)) : (k|=*(ucblock+i+1));
@@ -819,6 +827,7 @@ Stlink_Read_Memory (uint32_t address, uint32_t size, FILE *file)
 {
   uint32_t cnt;
   unsigned char buf[64];
+  uint32_t off = 0;
 
   while (size) {
     (size < 64) ? (cnt = size) : (cnt = 64);
@@ -846,7 +855,13 @@ Stlink_Read_Memory (uint32_t address, uint32_t size, FILE *file)
     Stlink_Swim_Cmd (STLINK_SWIM_READBUF);
     usb_rx (buf, cnt);
 
-    Ihex_Wr_Data (buf, address, cnt, file);
+    if ( (address - off + cnt) > 0x10000 ) {
+      off = address & 0xFFFF0;
+      fprintf (file, ":02000002%04X%02X\n", off>>4, 0xFF & (0x100 -
+          (0xFF & (0x04 + (off>>12) + ((off>>4)&0xFF) )) ) );
+    }
+
+    Ihex_Wr_Data (buf, address - off, cnt, file);
     address += cnt;
     size -= cnt;
   }

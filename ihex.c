@@ -146,7 +146,7 @@ Ihex_Wr_Data (unsigned char *data, uint32_t address, uint32_t size, FILE *file)
 }
 
 /* La apelare pointerul trebuie sa fie la inceputul fisierului. Functia se
- * apeleaza dupa deschiderea fisierului si returneaza numatur de blocuri
+ * apeleaza dupa deschiderea fisierului si returneaza numarul de blocuri
  * definite in fisier.
  * block_add reprezinta adresa aliniata de start a blocului curent
  */
@@ -199,6 +199,7 @@ Ihex_Count_Blocks (FILE *file, int blk_size)
       off = read_next_word (line, 9);
       if (off==-1)
         goto file_err;
+      off *= 16;
       break;
     default:
       printf (
@@ -218,6 +219,7 @@ file_err:
 
 /* La apelare *data si *ddef trebuie sa fie resetate, functia scrie in *data
  * doar octetii definiti in fisier, iar in *ddef se indica octetii definiti
+ * cu valoarea 0xFF pentru a se putea folosi ca mask la programarea selectiva
  */
 void
 Ihex_Read_Data_Blocks (FILE *file, int blk_size, uint32_t *blk_ads,
@@ -274,7 +276,7 @@ Ihex_Read_Data_Blocks (FILE *file, int blk_size, uint32_t *blk_ads,
         i += 2;
         uint32_t po = (block_index-1)*blk_size + line_add - block_add + j;
         *(data + po) = q;
-        *(ddef + po) = 0x01;
+        *(ddef + po) = 0xFF;
       }
       break;
     case 0x01:
@@ -287,10 +289,10 @@ Ihex_Read_Data_Blocks (FILE *file, int blk_size, uint32_t *blk_ads,
       if (line_cnt != 2)
         goto file_err;
       off = read_next_word (line, 9);
+      off *= 16;
       break;
     default:
-      printf (
-	      "Not supported record type found in %s file, line no. %d\n",
+      printf ("Not supported record type found in %s file, line no. %d\n",
           ghexfile_name, line_index);
       exit (EXIT_FAILURE);
     }
