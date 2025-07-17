@@ -1,0 +1,7 @@
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="3748", MODE:="0666"
+
+#This file being placed in /etc/udev/rules.d dir, has highest precedence over
+#other udev rules files, so the number prefix in the name of the file is not
+#really needed. If you already have a different, more complex rule for STLinkV2,
+#installed with other software, and you want to keep that, just delete this
+#rules file.

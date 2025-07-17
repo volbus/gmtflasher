@@ -30,3 +30,8 @@ fi
 
 #copy the mcu definition file
 cp -u gmtflasher_devices.xml /usr/share/gmtflasher/
+#copy the udev rule
+cp -u stlink_v2.rules /etc/udev/rules.d/
+#reload udevrules config
+udevadm control -R
+echo "New udev rule installed, you may now plug in the STLink V2 device!"

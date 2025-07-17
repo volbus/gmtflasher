@@ -124,6 +124,8 @@ hexadecimal digits-which make up a byte-as described below:
 
 
 /* Extended memory segment address is not handled in the fucntion!!!
+ * address is the 16-bit address to be written in the file, in case address > 0xFFFF
+ * only the lower 16-bits are significant.
  */
 void
 Ihex_Wr_Data (unsigned char *data, uint32_t address, uint32_t size, FILE *file)
@@ -148,7 +150,8 @@ Ihex_Wr_Data (unsigned char *data, uint32_t address, uint32_t size, FILE *file)
 /* La apelare pointerul trebuie sa fie la inceputul fisierului. Functia se
  * apeleaza dupa deschiderea fisierului si returneaza numarul de blocuri
  * definite in fisier.
- * block_add reprezinta adresa aliniata de start a blocului curent
+ * block_add reprezinta adresa aliniata de start a blocului curent.
+ * blk_size trebuie să fie de forma 2^x (32, 64...)
  */
 int
 Ihex_Count_Blocks (FILE *file, int blk_size)
@@ -185,6 +188,9 @@ Ihex_Count_Blocks (FILE *file, int blk_size)
       if (line_sta >= (block_add + blk_size)) {
         block_add = line_sta & ~(blk_size - 1);
         block_index++;
+      } else if (line_sta < block_add) {
+        block_add = line_sta & ~(blk_size - 1);
+        block_index++;
       }
       while (line_end > (block_add + blk_size)) {
         block_add += blk_size;
@@ -199,7 +205,14 @@ Ihex_Count_Blocks (FILE *file, int blk_size)
       off = read_next_word (line, 9);
       if (off==-1)
         goto file_err;
-      off *= 16;
+      off <<= 4;
+      break;
+    case 0x04:
+    //extended linear address record
+      off = read_next_word (line, 9);
+      if (off==-1)
+        goto file_err;
+      off <<= 16;
       break;
     default:
       printf (
@@ -262,6 +275,10 @@ Ihex_Read_Data_Blocks (FILE *file, int blk_size, uint32_t *blk_ads,
         block_add = line_add & ~(blk_size - 1);
         *(blk_ads + block_index) = block_add;
         block_index++;
+      } else if (line_add < block_add) {
+        block_add = line_add & ~(blk_size - 1);
+        *(blk_ads + block_index) = block_add;
+        block_index++;
       }
       for (int j=0, q; j<line_cnt; j++) {
         if ((line_add + j) >= (block_add + blk_size)) {
@@ -285,11 +302,24 @@ Ihex_Read_Data_Blocks (FILE *file, int blk_size, uint32_t *blk_ads,
         goto file_err;
       break;
     case 0x02:
-    //extended address
+    //extended segment address
       if (line_cnt != 2)
         goto file_err;
       off = read_next_word (line, 9);
-      off *= 16;
+      checksum += (off>>8);
+      checksum += (off & 0xFF);
+      off <<= 4;
+      i += 4;
+      break;
+    case 0x04:
+    //extended linear address record
+      if (line_cnt != 2)
+        goto file_err;
+      off = read_next_word (line, 9);
+      checksum += (off>>8);
+      checksum += (off && 0xFF);
+      off <<= 16;
+      i += 4;
       break;
     default:
       printf ("Not supported record type found in %s file, line no. %d\n",

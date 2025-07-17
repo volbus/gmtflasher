@@ -51,7 +51,7 @@ typedef struct {
   uint32_t add_1;
 } mcu;
 
-#define JOB_WRITE_ALL       		0x000001
+#define JOB_WRITE_ALL			0x000001
 #define JOB_READ_ALL			0x000002
 #define JOB_WRITE_FLASH			0x000004
 #define JOB_READ_FLASH			0x000008
